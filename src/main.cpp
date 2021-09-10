@@ -3,8 +3,13 @@
  * Complete Project Details https://randomnerdtutorials.com
 */
 
+// 26 B0 C0 C3 00 00 00 F5
+// 12 BA 96 A6 00 00 00 C2
+
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <DS2438.h>
 
 // Data wire is plugged into port 4 on the Arduino
 #define ONE_WIRE_BUS D4
@@ -16,6 +21,9 @@ OneWire oneWire(ONE_WIRE_BUS);
 
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature sensors(&oneWire);
+
+uint8_t DS2438_address[] = { 0x26, 0xb0, 0xc0, 0xc3, 0x00, 0x00, 0x00, 0xf5 };
+DS2438 ds2438(&oneWire, DS2438_address);
 
 int numberOfDevices; // Number of temperature devices found
 
@@ -35,6 +43,7 @@ void setup(void) {
   
   // Start up the library
   sensors.begin();
+  ds2438.begin();
   
   // Grab a count of devices on the wire
   numberOfDevices = sensors.getDeviceCount();
@@ -81,6 +90,19 @@ void loop(void) {
     Serial.print("Temp C: ");
     Serial.println(tempC);
     } 	
+  }
+
+  ds2438.update();
+  if (ds2438.isError()) {
+    Serial.println("Error reading from DS2438 device");
+  } else {
+    Serial.print("Temperature = ");
+    Serial.print(ds2438.getTemperature(), 1);
+    Serial.print("C, Channel A = ");
+    Serial.print(ds2438.getVoltage(DS2438_CHA), 1);
+    Serial.print("v, Channel B = ");
+    Serial.print(ds2438.getVoltage(DS2438_CHB), 1);
+    Serial.println("v.");
   }
 
   Serial.println(" ---------- ");
